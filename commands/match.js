@@ -7,6 +7,8 @@ var combinatorics = require('js-combinatorics');
 var outputUsers = './users.json';
 var outputGames = './games.json';
 
+trueskill.TrueSkill();
+
 module.exports = function(games, users) {
     var obj = {};
 
@@ -95,19 +97,8 @@ module.exports = function(games, users) {
             if(games[matches[3]].players.length < 6 && games[matches[3]].playerIds.indexOf(message.author.id) === -1) {
                 games[matches[3]].players.push(users[message.author.id]);
                 games[matches[3]].playerIds.push(message.author.id);
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
                 if(games[matches[3]].players.length == 6) {
                     var closestMatch = getClosestMatch(games[matches[3]].players);
-                    // TODO
                     var teams = {
                         teamA: _.map(closestMatch.teamA, function(player) {
                             return player.name;
