@@ -38,8 +38,6 @@ module.exports = function(games, users) {
                 tmp[key].playerIds = game.playerIds;
             }
         });
-        console.dir(games);
-        console.dir(tmp);
         fs.writeFile(outputGames, JSON.stringify(tmp, null, 4), [], function(err) {
             if(err) {
                 return console.log(err);

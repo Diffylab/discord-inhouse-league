@@ -82,7 +82,6 @@ var loadMatches = function() {
     });
 };
 loadMatches();
-console.log(JSON.stringify(games, null, 4));
 
 // Load commands here
 var commands = {};
