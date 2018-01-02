@@ -2,16 +2,15 @@
 
 var Discord = require('discord.js');
 var _ = require('lodash');
-var uuidv4 = require('uuid/v4');
 var trueskill = require('ts-trueskill');
 var combinatorics = require('js-combinatorics');
 
-var seed = require('./seed.json');
+var usersSeed = require('./users.json');
+var gamesSeed = require('./games.json');
 
 trueskill.TrueSkill();
 
 var config = require('./config');
-var commands = require('./commands');
 
 var log = console.log;
 console.log = function(body) {
@@ -20,54 +19,10 @@ console.log = function(body) {
 
 var client = new Discord.Client();
 
+var games = {};
 var users = {};
 
-var loadUsers = function() {
-    _.each(seed, function(user, key) {
-        users[key] = {
-            name: user.name,
-            rating: new trueskill.Rating(user.mu, user.sigma),
-            wins: user.wins,
-            losses: user.losses
-        }
-    });
-};
-loadUsers();
-
-var saveUsers = function() {
-    var tmp = {};
-    _.each(users, function(user, key) {
-        tmp[key] = {
-            name: user.name,
-            mu: user.rating.mu,
-            sigma: user.rating.sigma,
-            wins: user.wins,
-            losses: user.losses
-        };
-    });
-    var fs = require('fs');
-    fs.writeFile("./seed.json", JSON.stringify(tmp, null, 4), [], function(err) {
-        if(err) {
-            return console.log(err);
-        } else {
-            console.log("The file was saved!");
-        }
-    });
-};
-
-var getUsers = function(users) {
-    var tmpUsers = [];
-    var sortedUsers = _.sortBy(users, function(user) {
-        return -1 * user.rating.mu
-    });
-    _.each(sortedUsers, function(user, index) {
-        tmpUsers.push(index + '. ' + user.name + ' - ' + user.rating.mu);
-    });
-    return tmpUsers;
-};
-
-var games = {};
-
+// TODO need to get rid of this duplication, find a better way to load matches
 var getClosestMatch = function(players) {
     var indices = [0, 1, 2, 3, 4, 5];
     var combination;
@@ -100,6 +55,40 @@ var getClosestMatch = function(players) {
     return matchup;
 };
 
+var loadUsers = function() {
+    _.each(usersSeed, function(user, key) {
+        users[key] = {
+            name: user.name,
+            rating: new trueskill.Rating(user.mu, user.sigma),
+            wins: user.wins,
+            losses: user.losses
+        }
+    });
+};
+loadUsers();
+
+var loadMatches = function() {
+    _.each(gamesSeed, function(game, key) {
+        var players = _.map(game.playerIds, function(playerId) {
+            return users[playerId];
+        });
+        games[key] = {
+            players: players,
+            playerIds: game.playerIds
+        };
+        if(players.length == 6) {
+            games[key].match = getClosestMatch(players);
+        }
+    });
+};
+loadMatches();
+console.log(JSON.stringify(games, null, 4));
+
+// Load commands here
+var commands = {};
+commands.user = require('./commands/user.js')(users);
+commands.match = require('./commands/match.js')(games, users);
+
 client.on('ready', function() {
     console.log('Logged in as ' + client.user.tag);
 });
@@ -115,150 +104,27 @@ client.on('message', function(message) {
         console.log(message.author.username + '/' + message.author.id + ': ' + message.content);
         if(!users.hasOwnProperty(message.author.id) && (matches[2] && matches[2] != 'register')) {
             message.channel.send('Please register using `!ihl user register <username>` before trying to use this bot');
-
         } else {
             if(matches[1] && matches[1] == 'user') {
                 if(matches[2] && matches[2] == 'register') {
-                    if(matches[3]) {
-                        if(users.hasOwnProperty(message.author.id)) {
-                            message.channel.send('`' + message.author.id + '` is already registered as ' + users[message.author.id].name);
-                        } else {
-                            users[message.author.id] = {
-                                name: matches[3],
-                                rating: new trueskill.Rating(),
-                                wins: 0,
-                                losses: 0
-                            };
-                            message.channel.send('Registered user id `' + message.author.id + '` as ' + matches[3]);
-                            saveUsers();
-                        }
-                    } else {
-                        // TODO Please set your username
-                    }
+                    commands.user.register(message, matches);
                 } else if(matches[2] && matches[2] == 'list') {
-                    message.channel.send('Current users registered are: ```json\n' + JSON.stringify(getUsers(users), null, 4) + '\n```');
+                    commands.user.list(message);
                 } else {
-                    // TODO Please specify a valid `user` command
+                    message.channel.send("Please specify a valid 'user' command");
                 }
             } else if(matches[1] && matches[1] == 'match') {
                 if(matches[2] && matches[2] == 'create') {
-                    var uuid = uuidv4().substring(0, 7);
-                    games[uuid] = {
-                        players: [],
-                        playerIds: []
-                    };
-                    message.channel.send('New match created, please join with `!ihl match join ' + uuid + '`');
+                    commands.match.create(message);
                 } else if(matches[2] && matches[2] == 'join') {
-                    if(matches[3] && games.hasOwnProperty(matches[3])) {
-                        if(games[matches[3]].players.length < 6 && games[matches[3]].playerIds.indexOf(message.author.id) === -1) {
-                            games[matches[3]].players.push(users[message.author.id]);
-                            games[matches[3]].playerIds.push(message.author.id);
-                            if(games[matches[3]].players.length == 6) {
-                                var closestMatch = getClosestMatch(games[matches[3]].players);
-                                // TODO
-                                var teams = {
-                                    teamA: _.map(closestMatch.teamA, function(player) {
-                                        return player.name;
-                                    }),
-                                    teamB: _.map(closestMatch.teamB, function(player) {
-                                        return player.name;
-                                    })
-                                };
-                                games[matches[3]].match = closestMatch;
-
-                                message.channel.send(
-                                    'Match with ID `' + matches[3] + '` is now full\n' +
-                                    'Teams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```' +
-                                    'Please report results for the winning team using `!ihl match report ' + matches[3] + ' <teamA|teamB>`'
-                                );
-                            } else {
-                                message.channel.send('Added player ' + users[message.author.id].name + ' to `' + matches[3] + '`. Match currently has ' + games[matches[3]].players.length + ' players');
-                            }
-                        } else {
-                            message.channel.send('Match with ID `' + matches[3] + '` is full, or player is already in game.');
-                        }
-                    } else {
-                        message.channel.send('Match with ID `' + matches[3] + '` not found');
-                    }
+                    commands.match.join(message, matches);
                 } else if(matches[2] && matches[2] == 'report') {
-                    if(matches[3] && games.hasOwnProperty(matches[3])) {
-                        if(matches[4]) {
-                            if(matches[4].toLowerCase() == 'teama') {
-                                _.each(games[matches[3]].match.teamA, function(playerA) {
-                                    playerA.wins += 1;
-                                });
-                                _.each(games[matches[3]].match.teamB, function(playerB) {
-                                    playerB.losses += 1;
-                                });
-
-                                var teamARatings = _.map(games[matches[3]].match.teamA, function(playerA) {
-                                    return playerA.rating;
-                                });
-                                var teamBRatings = _.map(games[matches[3]].match.teamB, function(playerB) {
-                                    return playerB.rating;
-                                });
-                                var [teamARatings, teamBRatings] = trueskill.rate([teamARatings, teamBRatings]);
-                                games[matches[3]].match.teamA[0].rating = teamARatings[0];
-                                games[matches[3]].match.teamA[1].rating = teamARatings[1];
-                                games[matches[3]].match.teamA[2].rating = teamARatings[2];
-                                games[matches[3]].match.teamB[0].rating = teamBRatings[0];
-                                games[matches[3]].match.teamB[1].rating = teamBRatings[1];
-                                games[matches[3]].match.teamB[2].rating = teamBRatings[2];
-                                var output = [];
-                                var matchPlayers = games[matches[3]].match.teamA.concat(games[matches[3]].match.teamB);
-                                var sortedMatchPlayers = _.sortBy(matchPlayers, function(matchPlayer) {
-                                    return -1 * matchPlayer.rating.mu;
-                                });
-                                _.each(sortedMatchPlayers, function(player) {
-                                    output.push(player.name + ': ' + player.rating.mu);
-                                });
-                                delete games[matches[3]];
-                                message.channel.send('New ratings after match: `' + matches[3] + '`\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
-                                saveUsers();
-                            } else if(matches[4].toLowerCase() == 'teamb') {
-                                _.each(games[matches[3]].match.teamA, function(playerA) {
-                                    playerA.losses += 1;
-                                });
-                                _.each(games[matches[3]].match.teamB, function(playerB) {
-                                    playerB.wins += 1;
-                                });
-
-                                var teamARatings = _.map(games[matches[3]].match.teamA, function(playerA) {
-                                    return playerA.rating;
-                                });
-                                var teamBRatings = _.map(games[matches[3]].match.teamB, function(playerB) {
-                                    return playerB.rating;
-                                });
-                                var [teamBRatings, teamARatings] = trueskill.rate([teamBRatings, teamARatings]);
-                                games[matches[3]].match.teamA[0].rating = teamARatings[0];
-                                games[matches[3]].match.teamA[1].rating = teamARatings[1];
-                                games[matches[3]].match.teamA[2].rating = teamARatings[2];
-                                games[matches[3]].match.teamB[0].rating = teamBRatings[0];
-                                games[matches[3]].match.teamB[1].rating = teamBRatings[1];
-                                games[matches[3]].match.teamB[2].rating = teamBRatings[2];
-                                var output = [];
-                                var matchPlayers = games[matches[3]].match.teamA.concat(games[matches[3]].match.teamB);
-                                var sortedMatchPlayers = _.sortBy(matchPlayers, function(matchPlayer) {
-                                    return -1 * matchPlayer.rating.mu;
-                                });
-                                _.each(sortedMatchPlayers, function(player) {
-                                    output.push(player.name + ': ' + player.rating.mu);
-                                });
-                                delete games[matches[3]];
-                                message.channel.send('New ratings after match: `' + matches[3] + '`\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
-                                saveUsers();
-                            } else {
-                                message.channel.send('Please specify a valid winning team');
-                            }
-                        } else {
-
-                        }
-                    } else {
-                        message.channel.send('Match with ID `' + matches[3] + '` not found');
-                    }
+                    commands.match.report(message, matches);
+                } else {
+                    message.channel.send("Please specify a valid 'match' command");
                 }
             } else {
-                // TODO Please specify a valid
+                message.channel.send("Please specify a valid command");
             }
         }
     }
