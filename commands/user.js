@@ -57,7 +57,7 @@ module.exports = function(users) {
         _.each(sortedUsers, function(user, index) {
             tmpUsers.push(index + '. ' + user.name + ' - ' + Math.floor(100 * user.rating.mu));
         });
-        message.channel.send('Current users registered are: ```json\n' + JSON.stringify(getUsers(users), null, 4) + '\n```');
+        message.channel.send('Current users registered are: ```json\n' + JSON.stringify(tmpUsers, null, 4) + '\n```');
         message.delete();
     };
 
