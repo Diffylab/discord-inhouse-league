@@ -1,0 +1,21 @@
+{
+  "name": "ihl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "js-combinatorics": "^0.5.3",
+    "lodash": "^4.17.4",
+    "pg": "^7.4.0",
+    "sequelize": "^4.28.6",
+    "sequelize-cli": "^3.2.0",
+    "ts-trueskill": "^1.4.17",
+    "uuid": "^3.1.0"
+  }
+}
