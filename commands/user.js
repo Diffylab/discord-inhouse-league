@@ -1,32 +1,34 @@
 var _ = require('lodash');
 var fs = require('fs');
+var trueskill = require('ts-trueskill');
+
+trueskill.TrueSkill();
 
 var outputUsers = './users.json';
-
-var exportUsers = function() {
-    var tmp = {};
-    _.each(users, function(user, key) {
-        tmp[key] = {
-            name: user.name,
-            mu: user.rating.mu,
-            sigma: user.rating.sigma,
-            wins: user.wins,
-            losses: user.losses
-        };
-    });
-    fs.writeFile(outputUsers, JSON.stringify(tmp, null, 4), [], function(err) {
-        if(err) {
-            return console.log(err);
-        } else {
-            console.log(outputUsers + ' was saved');
-        }
-    });
-};
 
 module.exports = function(users) {
     var obj = {};
 
-    exportStuff: exportUsers,
+    var exportUsers = function() {
+        var tmp = {};
+        _.each(users, function(user, key) {
+            tmp[key] = {
+                name: user.name,
+                mu: user.rating.mu,
+                sigma: user.rating.sigma,
+                wins: user.wins,
+                losses: user.losses
+            };
+        });
+        fs.writeFile(outputUsers, JSON.stringify(tmp, null, 4), [], function(err) {
+            if(err) {
+                return console.log(err);
+            } else {
+                console.log(outputUsers + ' was saved');
+            }
+        });
+    };
+
     obj.register = function(message, matches) {
         if(matches[3]) {
             if(users.hasOwnProperty(message.author.id)) {
