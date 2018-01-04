@@ -87,6 +87,7 @@ loadMatches();
 var commands = {};
 commands.user = require('./commands/user.js')(users);
 commands.match = require('./commands/match.js')(games, users);
+commands.queue = require('./commands/queue.js')(games, users);
 
 client.on('ready', function() {
     console.log('Logged in as ' + client.user.tag);
@@ -97,33 +98,51 @@ client.on('error', function(err) {
 });
 
 client.on('message', function(message) {
-    var regex = /^!ihl (\w+) {0,1}(\w+)? {0,1}(\w+)? {0,1}(\w+)?$/
-    var matches = regex.exec(message.content);
-    if(matches) {
-        console.log(message.author.username + '/' + message.author.id + ': ' + message.content);
-        if(!users.hasOwnProperty(message.author.id) && (matches[2] && matches[2] != 'register')) {
-            message.channel.send('Please register using `!ihl user register <username>` before trying to use this bot');
-        } else {
-            if(matches[1] && matches[1] == 'user') {
-                if(matches[2] && matches[2] == 'register') {
-                    commands.user.register(message, matches);
-                } else if(matches[2] && matches[2] == 'list') {
-                    commands.user.list(message);
-                } else {
-                    message.channel.send("Please specify a valid 'user' command");
-                }
-            } else if(matches[1] && matches[1] == 'match') {
-                if(matches[2] && matches[2] == 'create') {
-                    commands.match.create(message);
-                } else if(matches[2] && matches[2] == 'join') {
-                    commands.match.join(message, matches);
-                } else if(matches[2] && matches[2] == 'report') {
-                    commands.match.report(message, matches);
-                } else {
-                    message.channel.send("Please specify a valid 'match' command");
-                }
+    if (message.channel.id == '393864980048510988' || message.channel.id == '393865011069583360') {
+        var regex = /^!ihl (\w+) {0,1}(\w+)? {0,1}(\w+)? {0,1}(\w+)?$/
+        var matches = regex.exec(message.content);
+        if(matches) {
+            console.log(message.author.username + '/' + message.author.id + ': ' + message.content);
+            if(!users.hasOwnProperty(message.author.id) && (matches[2] && matches[2] != 'register')) {
+                message.channel.send('Please register using `!ihl user register <username>` before trying to use this bot');
+                message.delete();
             } else {
-                message.channel.send("Please specify a valid command");
+                if(matches[1] && matches[1] === 'user') {
+                    if(matches[2] && matches[2] === 'register') {
+                        commands.user.register(message, matches);
+                    } else if(matches[2] && matches[2] === 'list') {
+                        commands.user.list(message);
+                    } else {
+                        message.channel.send("Please specify a valid 'user' command");
+                        message.delete();
+                    }
+                } else if(matches[1] && matches[1] === 'match') {
+                    // if(matches[2] && matches[2] === 'create') {
+                    //     commands.match.create(message);
+                    // } else if(matches[2] && matches[2] === 'join') {
+                    //     commands.match.join(message, matches);
+                    //     message.delete();
+                    // } else
+                    if(matches[2] && matches[2] === 'report') {
+                        commands.match.report(message, matches);
+                    } else {
+                        message.channel.send("Please specify a valid 'match' command");
+                        message.delete();
+                    }
+                } else if(matches[1] && matches[1] === 'queue') {
+                    if(matches[2] && matches[2] === 'join') {
+                        commands.queue.join(message, matches);
+                        message.delete();
+                    } else if(matches[2] && matches[2] === 'leave') {
+                        commands.queue.leave(message, matches);
+                    }
+                } else {
+                    message.channel.send("Please specify a valid command");
+                }
+            }
+        } else {
+            if(message.author.id != '148166415952773121' && message.author.id != '396857286821150720') {
+                message.delete();
             }
         }
     }

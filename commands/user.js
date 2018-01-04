@@ -33,34 +33,38 @@ module.exports = function(users) {
         if(matches[3]) {
             if(users.hasOwnProperty(message.author.id)) {
                 message.channel.send('`' + message.author.id + '` is already registered as ' + users[message.author.id].name);
-                message.delete();
             } else {
                 users[message.author.id] = {
                     name: matches[3],
-                    rating: new trueskill.Rating(),
+                    rating: new trueskill.Rating(25, 1.618),
                     wins: 0,
                     losses: 0
                 };
                 message.channel.send('Registered user id `' + message.author.id + '` as ' + matches[3]);
-                message.delete();
                 exportUsers();
             }
         } else {
             message.channel.send('Please specify a username to register as');
-            message.delete();
         }
     };
 
     obj.list = function(message) {
         var tmpUsers = [];
+        var count = 0;
         var sortedUsers = _.sortBy(users, function(user) {
             return -1 * user.rating.mu
         });
-        _.each(sortedUsers, function(user, index) {
-            tmpUsers.push(index + '. ' + user.name + ' - ' + Math.floor(100 * user.rating.mu));
+        _.each(sortedUsers, function(user) {
+            if((user.wins + user.losses) >= 10) {
+                if (count === 0) {
+                    tmpUsers.push('S. ' + user.name + ' (' + user.wins + '-' + user.losses + ')' + ' - ' + Math.floor(100 * user.rating.mu));
+                } else {
+                    tmpUsers.push(count + '. ' + user.name + ' (' + user.wins + '-' + user.losses + ')' + ' - ' + Math.floor(100 * user.rating.mu));
+                }
+                count += 1;
+            }
         });
-        message.channel.send('Current users registered are: ```json\n' + JSON.stringify(tmpUsers, null, 4) + '\n```');
-        message.delete();
+        message.channel.send('Top 30 users with 10 games played are: ```json\n' + JSON.stringify(tmpUsers.slice(0,30), null, 4) + '\n```');
     };
 
     return obj;
