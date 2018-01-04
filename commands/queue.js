@@ -14,6 +14,43 @@ module.exports = function(games, users) {
     var queueIds = [];
     var overflowIds = [];
 
+    var exportUsers = function() {
+        var tmp = {};
+        _.each(users, function(user, key) {
+            tmp[key] = {
+                name: user.name,
+                mu: user.rating.mu,
+                sigma: user.rating.sigma,
+                wins: user.wins,
+                losses: user.losses
+            };
+        });
+        fs.writeFile(outputUsers, JSON.stringify(tmp, null, 4), [], function(err) {
+            if(err) {
+                return console.log(err);
+            } else {
+                console.log(outputUsers + ' was saved');
+            }
+        });
+    };
+
+    var exportGames = function() {
+        var tmp = {};
+        _.each(games, function(game, key) {
+            tmp[key] = {};
+            if(game.playerIds) {
+                tmp[key].playerIds = game.playerIds;
+            }
+        });
+        fs.writeFile(outputGames, JSON.stringify(tmp, null, 4), [], function(err) {
+            if(err) {
+                return console.log(err);
+            } else {
+                console.log(outputGames + ' was saved');
+            }
+        });
+    };
+
     var getUserActiveGame = function(userId) {
         var inGame = null;
         _.each(games, function(game, key) {
