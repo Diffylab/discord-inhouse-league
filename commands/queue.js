@@ -210,7 +210,7 @@ module.exports = function (games, users) {
             }
             message
                 .channel
-                .send(users[message.author.id].name + ' removed from queue, there are' + queueIds.length + " players in que");
+                .send(users[message.author.id].name + ' removed from queue, there are ' + queueIds.length + " players in queue");
         } else {
             message
                 .channel
