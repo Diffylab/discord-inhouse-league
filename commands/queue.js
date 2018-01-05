@@ -171,7 +171,8 @@ module.exports = function(games, users) {
     obj.leave = function(message, matches) {
         var queueId = queueIds.indexOf(message.author.id);
         var overflowId = overflowIds.indexOf(message.author.id);
-        if(queueId !== -1 && overflowId !== -1) {
+
+        if(queueId !== -1 || overflowId !== -1) {
             if(queueId !== -1) {
                 queueIds.splice(queueId, 1);
             }
