@@ -120,7 +120,7 @@ client.on('error', function (err) {
 });
 
 client.on('message', function (message) {
-    if (message.channel.id == '398934750892392448') { // || message.channel.id == '393865011069583360') {
+    if (message.channel.id == '398946565831655424' || message.channel.id == '398934750892392448' || message.channel.id == '398946650514522113' || message.channel.id == '398946603362287643') {
         var regex = /^!ihl (\w+) {0,1}(\w+)? {0,1}(\w+)? {0,1}(\w+)?$/
         var matches = regex.exec(message.content);
         if (matches) {
