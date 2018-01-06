@@ -9,12 +9,12 @@ var outputGames = './games.json';
 
 trueskill.TrueSkill();
 
-module.exports = function(games, users) {
+module.exports = function (games, users) {
     var obj = {};
 
-    var exportUsers = function() {
+    var exportUsers = function () {
         var tmp = {};
-        _.each(users, function(user, key) {
+        _.each(users, function (user, key) {
             tmp[key] = {
                 name: user.name,
                 mu: user.rating.mu,
@@ -23,8 +23,8 @@ module.exports = function(games, users) {
                 losses: user.losses
             };
         });
-        fs.writeFile(outputUsers, JSON.stringify(tmp, null, 4), [], function(err) {
-            if(err) {
+        fs.writeFile(outputUsers, JSON.stringify(tmp, null, 4), [], function (err) {
+            if (err) {
                 return console.log(err);
             } else {
                 console.log(outputUsers + ' was saved');
@@ -32,16 +32,16 @@ module.exports = function(games, users) {
         });
     };
 
-    var exportGames = function() {
+    var exportGames = function () {
         var tmp = {};
-        _.each(games, function(game, key) {
+        _.each(games, function (game, key) {
             tmp[key] = {};
-            if(game.playerIds) {
+            if (game.playerIds) {
                 tmp[key].playerIds = game.playerIds;
             }
         });
-        fs.writeFile(outputGames, JSON.stringify(tmp, null, 4), [], function(err) {
-            if(err) {
+        fs.writeFile(outputGames, JSON.stringify(tmp, null, 4), [], function (err) {
+            if (err) {
                 return console.log(err);
             } else {
                 console.log(outputGames + ' was saved');
@@ -49,29 +49,48 @@ module.exports = function(games, users) {
         });
     };
 
-    var getClosestMatch = function(players) {
-        var indices = [0, 1, 2, 3, 4, 5];
+    var getClosestMatch = function (players) {
+        var indices = [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+        ];
         var combination;
         var combinations = combinatorics.combination(indices, 3); // can change this if you need more players per team
         var matchup = {
-            teamA: [players[0], players[1], players[2]],
-            teamB: [players[3], players[4], players[5]],
+            teamA: [
+                players[0], players[1], players[2]
+            ],
+            teamB: [
+                players[3], players[4], players[5]
+            ],
             quality: 0
         };
-        while(combination = combinations.next()) {
-            var teamA = [players[combination[0]], players[combination[1]], players[combination[2]]];
-            var teamARatings = _.map(teamA, function(playerA) {
+        while (combination = combinations.next()) {
+            var teamA = [
+                players[combination[0]],
+                players[combination[1]],
+                players[combination[2]]
+            ];
+            var teamARatings = _.map(teamA, function (playerA) {
                 return playerA.rating;
             });
-            var teamBIds = _.filter(indices, function(index) {
+            var teamBIds = _.filter(indices, function (index) {
                 return combination.indexOf(index) === -1;
             });
-            var teamB = [players[teamBIds[0]], players[teamBIds[1]], players[teamBIds[2]]];
-            var teamBRatings = _.map(teamB, function(playerB) {
+            var teamB = [
+                players[teamBIds[0]],
+                players[teamBIds[1]],
+                players[teamBIds[2]]
+            ];
+            var teamBRatings = _.map(teamB, function (playerB) {
                 return playerB.rating;
             });
             var quality = trueskill.quality([teamARatings, teamBRatings])
-            if(quality > matchup.quality) { // pick the match with the higest quality
+            if (quality > matchup.quality) { // pick the match with the higest quality
                 matchup.teamA = teamA;
                 matchup.teamB = teamB;
                 matchup.quality = quality;
@@ -81,70 +100,82 @@ module.exports = function(games, users) {
         return matchup;
     };
 
-    obj.create = function(message) {
+    obj.create = function (message) {
         var uuid = uuidv4().substring(0, 7);
         games[uuid] = {
             players: [],
             playerIds: []
         };
-        message.channel.send('New match created, please join with `!ihl match join ' + uuid + '`');
+        message
+            .channel
+            .send('New match created, please join with `!ihl match join ' + uuid + '`');
         exportGames();
     };
 
-    obj.join = function(message, matches) {
-        if(matches[3] && games.hasOwnProperty(matches[3])) {
-            if(games[matches[3]].players.length < 6 && games[matches[3]].playerIds.indexOf(message.author.id) === -1) {
-                games[matches[3]].players.push(users[message.author.id]);
-                games[matches[3]].playerIds.push(message.author.id);
-                if(games[matches[3]].players.length == 6) {
+    obj.join = function (message, matches) {
+        if (matches[3] && games.hasOwnProperty(matches[3])) {
+            if (games[matches[3]].players.length < 6 && games[matches[3]].playerIds.indexOf(message.author.id) === -1) {
+                games[matches[3]]
+                    .players
+                    .push(users[message.author.id]);
+                games[matches[3]]
+                    .playerIds
+                    .push(message.author.id);
+                if (games[matches[3]].players.length == 6) {
                     var closestMatch = getClosestMatch(games[matches[3]].players);
                     var teams = {
-                        teamA: _.map(closestMatch.teamA, function(player) {
+                        teamA: _.map(closestMatch.teamA, function (player) {
                             return player.name;
                         }),
-                        teamB: _.map(closestMatch.teamB, function(player) {
+                        teamB: _.map(closestMatch.teamB, function (player) {
                             return player.name;
                         })
                     };
                     games[matches[3]].match = closestMatch;
 
-                    message.channel.send(
-                        'Match with ID `' + matches[3] + '` is now full\n' +
-                        'Teams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```' +
-                        'Please report results for the winning team using `!ihl match report ' + matches[3] + ' <teamA|teamB>`'
-                    );
+                    message
+                        .channel
+                        .send('Match with ID `' + matches[3] + '` is now full\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```Please report results for the winning team using `!ihl match report ' + matches[3] + ' <teamA|teamB>`');
                     exportGames();
                 } else {
-                    message.channel.send('Added player ' + users[message.author.id].name + ' to `' + matches[3] + '`. Match currently has ' + games[matches[3]].players.length + ' players');
+                    message
+                        .channel
+                        .send('Added player ' + users[message.author.id].name + ' to `' + matches[3] + '`. Match currently has ' + games[matches[3]].players.length + ' players');
                     exportGames();
                 }
             } else {
-                message.channel.send('Match with ID `' + matches[3] + '` is full, or player is already in game.');
+                message
+                    .channel
+                    .send('Match with ID `' + matches[3] + '` is full, or player is already in game.');
             }
         } else {
-            message.channel.send('Match with ID `' + matches[3] + '` not found');
+            message
+                .channel
+                .send('Match with ID `' + matches[3] + '` not found');
         }
     };
 
-    obj.report = function(message, matches) {
-        if(matches[3] && games.hasOwnProperty(matches[3])) {
-            if(games[matches[3]].playerIds.indexOf(message.author.id) !== -1) {
-                if(matches[4]) {
-                    if(matches[4].toLowerCase() == 'teama') {
-                        _.each(games[matches[3]].match.teamA, function(playerA) {
-                            playerA.wins += 1;
-                        });
-                        _.each(games[matches[3]].match.teamB, function(playerB) {
+    obj.report = function (message, matches) {
+        if (matches[3] && games.hasOwnProperty(matches[3])) {
+            if (games[matches[3]].playerIds.indexOf(message.author.id) !== -1) {
+                if (matches[4]) {
+                    if (matches[4].toLowerCase() == 'teama') {
+                        _
+                            .each(games[matches[3]].match.teamA, function (playerA) {
+                                playerA.wins += 1;
+                            });
+                        _.each(games[matches[3]].match.teamB, function (playerB) {
                             playerB.losses += 1;
                         });
 
-                        var teamARatings = _.map(games[matches[3]].match.teamA, function(playerA) {
+                        var teamARatings = _.map(games[matches[3]].match.teamA, function (playerA) {
                             return playerA.rating;
                         });
-                        var teamBRatings = _.map(games[matches[3]].match.teamB, function(playerB) {
+                        var teamBRatings = _.map(games[matches[3]].match.teamB, function (playerB) {
                             return playerB.rating;
                         });
-                        var [teamARatings, teamBRatings] = trueskill.rate([teamARatings, teamBRatings]);
+                        var [teamARatings,
+                            teamBRatings] = trueskill.rate([teamARatings, teamBRatings]);
                         games[matches[3]].match.teamA[0].rating = teamARatings[0];
                         games[matches[3]].match.teamA[1].rating = teamARatings[1];
                         games[matches[3]].match.teamA[2].rating = teamARatings[2];
@@ -152,31 +183,38 @@ module.exports = function(games, users) {
                         games[matches[3]].match.teamB[1].rating = teamBRatings[1];
                         games[matches[3]].match.teamB[2].rating = teamBRatings[2];
                         var output = [];
-                        var matchPlayers = games[matches[3]].match.teamA.concat(games[matches[3]].match.teamB);
-                        var sortedMatchPlayers = _.sortBy(matchPlayers, function(matchPlayer) {
+                        var matchPlayers = games[matches[3]]
+                            .match
+                            .teamA
+                            .concat(games[matches[3]].match.teamB);
+                        var sortedMatchPlayers = _.sortBy(matchPlayers, function (matchPlayer) {
                             return -1 * matchPlayer.rating.mu;
                         });
-                        _.each(sortedMatchPlayers, function(player) {
+                        _.each(sortedMatchPlayers, function (player) {
                             output.push(player.name + ': ' + Math.floor(100 * player.rating.mu));
                         });
                         delete games[matches[3]];
-                        message.channel.send('Updated results for match ID `' + matches[3] + '` with winning team TeamA\nNew ratings after match are:\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
+                        message
+                            .channel
+                            .send('Updated results for match ID `' + matches[3] + '` with winning team TeamA\nNew ratings after match are:\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
                         exportUsers();
-                    } else if(matches[4].toLowerCase() == 'teamb') {
-                        _.each(games[matches[3]].match.teamA, function(playerA) {
-                            playerA.losses += 1;
-                        });
-                        _.each(games[matches[3]].match.teamB, function(playerB) {
+                    } else if (matches[4].toLowerCase() == 'teamb') {
+                        _
+                            .each(games[matches[3]].match.teamA, function (playerA) {
+                                playerA.losses += 1;
+                            });
+                        _.each(games[matches[3]].match.teamB, function (playerB) {
                             playerB.wins += 1;
                         });
 
-                        var teamARatings = _.map(games[matches[3]].match.teamA, function(playerA) {
+                        var teamARatings = _.map(games[matches[3]].match.teamA, function (playerA) {
                             return playerA.rating;
                         });
-                        var teamBRatings = _.map(games[matches[3]].match.teamB, function(playerB) {
+                        var teamBRatings = _.map(games[matches[3]].match.teamB, function (playerB) {
                             return playerB.rating;
                         });
-                        var [teamBRatings, teamARatings] = trueskill.rate([teamBRatings, teamARatings]);
+                        var [teamBRatings,
+                            teamARatings] = trueskill.rate([teamBRatings, teamARatings]);
                         games[matches[3]].match.teamA[0].rating = teamARatings[0];
                         games[matches[3]].match.teamA[1].rating = teamARatings[1];
                         games[matches[3]].match.teamA[2].rating = teamARatings[2];
@@ -184,27 +222,40 @@ module.exports = function(games, users) {
                         games[matches[3]].match.teamB[1].rating = teamBRatings[1];
                         games[matches[3]].match.teamB[2].rating = teamBRatings[2];
                         var output = [];
-                        var matchPlayers = games[matches[3]].match.teamA.concat(games[matches[3]].match.teamB);
-                        var sortedMatchPlayers = _.sortBy(matchPlayers, function(matchPlayer) {
+                        var matchPlayers = games[matches[3]]
+                            .match
+                            .teamA
+                            .concat(games[matches[3]].match.teamB);
+                        var sortedMatchPlayers = _.sortBy(matchPlayers, function (matchPlayer) {
                             return -1 * matchPlayer.rating.mu;
                         });
-                        _.each(sortedMatchPlayers, function(player) {
+                        _.each(sortedMatchPlayers, function (player) {
                             output.push(player.name + ' - ' + Math.floor(100 * player.rating.mu));
                         });
                         delete games[matches[3]];
-                        message.channel.send('Updated results for match ID `' + matches[3] + '` with winning team TeamB\nNew ratings after match are:\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
+                        message
+                            .channel
+                            .send('Updated results for match ID `' + matches[3] + '` with winning team TeamB\nNew ratings after match are:\n```json\n' + JSON.stringify(output, null, 4) + '\n```');
                         exportUsers();
                     } else {
-                        message.channel.send('Please specify a valid winning team');
+                        message
+                            .channel
+                            .send('Please specify a valid winning team');
                     }
                 } else {
-                    message.channel.send('Please specify a winning team');
+                    message
+                        .channel
+                        .send('Please specify a winning team');
                 }
             } else {
-                message.channel.send(users[message.author.id].name + ' was not a part of match `' + matches[3] + '`');
+                message
+                    .channel
+                    .send(users[message.author.id].name + ' was not a part of match `' + matches[3] + '`');
             }
         } else {
-            message.channel.send('Match with ID `' + matches[3] + '` not found');
+            message
+                .channel
+                .send('Match with ID `' + matches[3] + '` not found');
         }
     };
 

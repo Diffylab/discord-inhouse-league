@@ -146,9 +146,6 @@ client.on('message', function (message) {
                             .send("Please specify a valid 'user' command");
                     }
                 } else if (matches[1] && matches[1] === 'match') {
-                    // if(matches[2] && matches[2] === 'create') { commands.match.create(message); }
-                    // else if(matches[2] && matches[2] === 'join') { commands.match.join(message,
-                    // matches);     message.delete(); } else
                     if (matches[2] && matches[2] === 'report') {
                         commands
                             .match
@@ -178,7 +175,7 @@ client.on('message', function (message) {
                 }
             }
         }
-        if (message.author.id != '398933581314916362' && message.author.id != '121630407782432769' && message.author.id != "207582905684197377") {
+        if (message.author.id != '398933581314916362' && message.author.id != '121630407782432769') {
             message.delete();
         }
     }

@@ -22,10 +22,9 @@ let mapList = [
 
 const getMaps = () => {
     mapList = _.shuffle(mapList);
-    return `Your selected maps are
-    1: ${mapList[0]}
-    2: ${mapList[1]}
-    3: ${mapList[2]}
+    return `1: ${mapList[0]}
+2: ${mapList[1]}
+3: ${mapList[2]}
     `;
 }
 
@@ -48,16 +47,16 @@ module.exports = function (games, users) {
         for (let key in lobbies) {
             if (lobbies[key] === "free") {
                 lobbies[key] = matchID;
-                return key;
+                return `**${key}**`;
             }
         }
-        return "No free lobby";
+        return "**No free lobby**";
     }
 
     obj.unsetLobby = (matchID) => {
         for (let key in lobbies) {
             if (lobbies[key] == matchID) {
-                lobbies[key] = free
+                lobbies[key] = "free"
             }
         }
     }
@@ -216,10 +215,51 @@ module.exports = function (games, users) {
                         games[uuid].match = closestMatch;
                         queueIds = [];
                         mergeOverflow(); // need to start cleaning out the overflow queue before adding in new users
+                        const formatTeams = (teams) => {
+                            return `**TeamA**
+${teams.teamA[0]}
+${teams.teamA[1]}
+${teams.teamA[2]}
 
-                        let selectedMaps = message
+**TeamB**
+${teams.teamB[0]}
+${teams.teamB[1]}
+${teams.teamB[2]}`;
+                        }
+                        const embed = {
+                            "title": "`Match Created`",
+                            "color": 0x50FF38,
+                            "description": "A 3v3 match has been created",
+                            "author": {
+                                "name": message.guild.name,
+                                "icon_url": message.guild.icon_url
+                            },
+                            "fields": [
+                                {
+                                    "name": "Players",
+                                    value: formatTeams(teams)
+                                }, {
+                                    "name": "Maps",
+                                    value: getMaps()
+                                }, {
+                                    "name": "Lobby",
+                                    value: obj.getLobby(uuid)
+                                }, {
+                                    "name": "Reporting Instructions",
+                                    value: "Please report results for the winning team using `!ihl match report " + uuid + "`"
+                                }
+                            ]
+
+                        }
+
+                        // message     .channel     .send('New match created with ID `' + uuid + '`
+                        // created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n'
+                        // + getMaps() + '\nPlease report results for the winning team using `!ihl
+                        // match report ' + uuid + ' <teamA|teamB>`\nYou have been provided with: ' +
+                        // obj.getLobby(uuid));
+                        message
                             .channel
-                            .send('New match created with ID `' + uuid + '` created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n' + getMaps() + '\nPlease report results for the winning team using `!ihl match report ' + uuid + ' <teamA|teamB>`\nYou have been provided with: ' + obj.getLobby(uuid));
+                            .send("", {embed});
                         exportGames();
                     } else {
                         // Don't need to do anything here
