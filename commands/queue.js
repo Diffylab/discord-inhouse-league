@@ -9,6 +9,24 @@ var outputGames = './games.json';
 
 trueskill.TrueSkill();
 
+let mapList = [
+    "Araz Day",
+    "Araz Night",
+    "Skyring Night",
+    "Orman Night",
+    "Blackstone Day",
+    "Blackstone Night",
+    "Dragon Day",
+    "Dragon Night"
+];
+
+const getMaps = () => {
+    mapList = _.shuffle(mapList);
+    return `Your maps are
+    1: ${mapList[0]}
+    2: ${mapList[1]}
+    3: ${mapList[2]}`;
+}
 module.exports = function (games, users) {
     var obj = {};
     var queueIds = [];
@@ -169,9 +187,9 @@ module.exports = function (games, users) {
                         queueIds = [];
                         mergeOverflow(); // need to start cleaning out the overflow queue before adding in new users
 
-                        message
+                        let selectedMaps = message
                             .channel
-                            .send('New match created with ID `' + uuid + '` created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```Please report results for the winning team using `!ihl match report ' + uuid + ' <teamA|teamB>`');
+                            .send('New match created with ID `' + uuid + '` created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n Your selected maps are ' + getMaps() + 'Please report results for the winning team using `!ihl match report ' + uuid + ' <teamA|teamB>`');
                         exportGames();
                     } else {
                         // Don't need to do anything here
