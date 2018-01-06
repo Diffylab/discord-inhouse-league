@@ -22,15 +22,45 @@ let mapList = [
 
 const getMaps = () => {
     mapList = _.shuffle(mapList);
-    return `Your maps are
+    return `Your selected maps are
     1: ${mapList[0]}
     2: ${mapList[1]}
-    3: ${mapList[2]}`;
+    3: ${mapList[2]}
+    `;
 }
+
+const lobbies = {
+    Lobby1: "free",
+    Lobby2: "free",
+    Lobby3: "free",
+    Lobby4: "free",
+    Lobby5: "free",
+    Lobby6: "free",
+    Lobby7: "free"
+}
+
 module.exports = function (games, users) {
     var obj = {};
     var queueIds = [];
     var overflowIds = [];
+
+    obj.getLobby = (matchID) => {
+        for (let key in lobbies) {
+            if (lobbies[key] === "free") {
+                lobbies[key] = matchID;
+                return key;
+            }
+        }
+        return "No free lobby";
+    }
+
+    obj.unsetLobby = (matchID) => {
+        for (let key in lobbies) {
+            if (lobbies[key] == matchID) {
+                lobbies[key] = free
+            }
+        }
+    }
 
     var exportUsers = function () {
         var tmp = {};
@@ -189,7 +219,7 @@ module.exports = function (games, users) {
 
                         let selectedMaps = message
                             .channel
-                            .send('New match created with ID `' + uuid + '` created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n Your selected maps are ' + getMaps() + 'Please report results for the winning team using `!ihl match report ' + uuid + ' <teamA|teamB>`');
+                            .send('New match created with ID `' + uuid + '` created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n' + getMaps() + '\nPlease report results for the winning team using `!ihl match report ' + uuid + ' <teamA|teamB>`\nYou have been provided with: ' + obj.getLobby(uuid));
                         exportGames();
                     } else {
                         // Don't need to do anything here

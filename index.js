@@ -153,6 +153,9 @@ client.on('message', function (message) {
                         commands
                             .match
                             .report(message, matches);
+                        commands
+                            .queue
+                            .unsetLobby(matches[3]);
                     } else {
                         message
                             .channel
