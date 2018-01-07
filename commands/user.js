@@ -77,11 +77,17 @@ module.exports = function (users) {
 
     obj.profile = function (message, matches) {
         if (matches[3]) {
-            const foundUser = users.find((user) => user.name === matches[3]);
+            let foundUser = {};
+            _.each(users, (user) => {
+                if (user.name === matches[3]) {
+                    foundUser = user;
+                }
+            });
+
             if (foundUser) {
                 message
                     .channel
-                    .send(user.name + ' (' + user.wins + '-' + user.losses + ') - ' + Math.floor(100 * user.rating.mu))
+                    .send("`" + foundUser.name + ' (' + foundUser.wins + '-' + foundUser.losses + ') - ' + Math.floor(100 * foundUser.rating.mu) + "`");
 
             } else {
                 message
