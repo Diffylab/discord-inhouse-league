@@ -140,6 +140,10 @@ client.on('message', function (message) {
                         commands
                             .user
                             .list(message);
+                    } else if (matches[2] && matches[2] === "profile") {
+                        commands
+                            .user
+                            .profile(message, matches);
                     } else {
                         message
                             .channel
