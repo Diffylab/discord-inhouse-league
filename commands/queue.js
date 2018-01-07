@@ -226,6 +226,12 @@ ${teams.teamB[0]}
 ${teams.teamB[1]}
 ${teams.teamB[2]}`;
                         }
+
+                        const getTagIDs = (match) => {
+                            let output = "";
+                            match.forEach(id => output += `<@${id}> `);
+                            return output;
+                        }
                         const embed = {
                             "title": "`Match Created`",
                             "color": 0x50FF38,
@@ -259,7 +265,7 @@ ${teams.teamB[2]}`;
                         // obj.getLobby(uuid));
                         message
                             .channel
-                            .send("", {embed});
+                            .send(getTagIDs(games[uuid].playerIds), {embed});
                         exportGames();
                     } else {
                         // Don't need to do anything here
