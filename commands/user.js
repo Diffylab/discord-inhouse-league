@@ -77,13 +77,12 @@ module.exports = function (users) {
 
     obj.profile = function (message, matches) {
         if (matches[3]) {
-            let foundUser = {};
+            let foundUser = null;
             _.each(users, (user) => {
                 if (user.name === matches[3]) {
                     foundUser = user;
                 }
             });
-
             if (foundUser) {
                 message
                     .channel
