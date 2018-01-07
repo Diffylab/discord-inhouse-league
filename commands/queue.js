@@ -109,7 +109,11 @@ module.exports = function (games, users) {
     };
 
     var userInQueue = function (userId) {
-        return queueIds.indexOf(userId) !== -1 || overflowIds.indexOf(userId) !== -1;
+        if (userId === "121630407782432769") 
+            return false;
+        else {
+            return queueIds.indexOf(userId) !== -1 || overflowIds.indexOf(userId) !== -1;
+        }
     };
 
     var getQueueDisplayNames = function () {
@@ -226,6 +230,12 @@ ${teams.teamB[0]}
 ${teams.teamB[1]}
 ${teams.teamB[2]}`;
                         }
+
+                        const getTagIDs = (match) => {
+                            let output = "";
+                            match.forEach(id => output += `<@${id}> `);
+                            return output;
+                        }
                         const embed = {
                             "title": "`Match Created`",
                             "color": 0x50FF38,
@@ -254,12 +264,12 @@ ${teams.teamB[2]}`;
 
                         // message     .channel     .send('New match created with ID `' + uuid + '`
                         // created\nTeams are \n```json\n' + JSON.stringify(teams, null, 4) + '\n```\n'
-                        // + getMaps() + '\nPlease report results for the winning team using `!ihl
-                        // match report ' + uuid + ' <teamA|teamB>`\nYou have been provided with: ' +
+                        // + getMaps() + '\nPlease report results for the winning team using `!ihl match
+                        // report ' + uuid + ' <teamA|teamB>`\nYou have been provided with: ' +
                         // obj.getLobby(uuid));
                         message
                             .channel
-                            .send("", {embed});
+                            .send(getTagIDs(games[uuid].playerIds), {embed});
                         exportGames();
                     } else {
                         // Don't need to do anything here
