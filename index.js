@@ -123,7 +123,9 @@ client.on('message', function (message) {
     if (message.channel.id == '398946565831655424' || message.channel.id == '398934750892392448' || message.channel.id == '398946650514522113' || message.channel.id == '398946603362287643') {
         var regex = /^!ihl (\w+) {0,1}(\w+)? {0,1}(\w+)? {0,1}(\w+)?$/
         var matches = regex.exec(message.content);
-        if (matches) {
+        
+        if (message.content[0] == "!" || matches == true) {
+            var command = message.content.substr(1) // Separate message for quick commands without the regex
             console.log(message.author.username + '/' + message.author.id + ': ' + message.content);
             if (!users.hasOwnProperty(message.author.id) && (matches[2] && matches[2] != 'register')) {
                 message
@@ -131,52 +133,64 @@ client.on('message', function (message) {
                     .send('Please register using `!ihl user register <username>` before trying to use this ' +
                             'bot');
             } else {
-                if (matches[1] && matches[1] === 'user') {
-                    if (matches[2] && matches[2] === 'register') {
-                        commands
+                // First check for quick commands
+                if (command === "queue" || command === "q" || command === "que") {
+                    commands
+                    .queue
+                    .join(message, matches);
+                } else if (command === "leave" || command === "l" || command === "unq") {
+                    commands
+                    .queue
+                    .leave(message, matches);
+                } else {
+                    if (matches[1] && matches[1] === 'user') {
+                        if (matches[2] && matches[2] === 'register') {
+                            commands
                             .user
                             .register(message, matches);
-                    } else if (matches[2] && matches[2] === 'list') {
-                        commands
-                            .user
-                            .list(message);
-                    } else if (matches[2] && matches[2] === "profile") {
-                        commands
-                            .user
-                            .profile(message, matches);
+                        } else if (matches[2] && matches[2] === 'list') {
+                            commands
+                                .user
+                                .list(message);
+                        } else if (matches[2] && matches[2] === "profile") {
+                            commands
+                                .user
+                                .profile(message, matches);
+                        } else {
+                            message
+                                .channel
+                                .send("Please specify a valid 'user' command");
+                        }
+                    } else if (matches[1] && matches[1] === 'match') {
+                        if (matches[2] && matches[2] === 'report') {
+                            commands
+                                .match
+                                .report(message, matches);
+                            commands
+                                .queue
+                                .unsetLobby(matches[3]);
+                        } else {
+                            message
+                                .channel
+                                .send("Please specify a valid 'match' command");
+                        }
+                    } else if (matches[1] && matches[1] === 'queue') {
+                        if (matches[2] && matches[2] === 'join') {
+                            commands
+                                .queue
+                                .join(message, matches);
+                        } else if (matches[2] && matches[2] === 'leave') {
+                            commands
+                                .queue
+                                .leave(message, matches);
+                        }
                     } else {
                         message
                             .channel
-                            .send("Please specify a valid 'user' command");
+                            .send("Please specify a valid command");
                     }
-                } else if (matches[1] && matches[1] === 'match') {
-                    if (matches[2] && matches[2] === 'report') {
-                        commands
-                            .match
-                            .report(message, matches);
-                        commands
-                            .queue
-                            .unsetLobby(matches[3]);
-                    } else {
-                        message
-                            .channel
-                            .send("Please specify a valid 'match' command");
-                    }
-                } else if (matches[1] && matches[1] === 'queue') {
-                    if (matches[2] && matches[2] === 'join') {
-                        commands
-                            .queue
-                            .join(message, matches);
-                    } else if (matches[2] && matches[2] === 'leave') {
-                        commands
-                            .queue
-                            .leave(message, matches);
-                    }
-                } else {
-                    message
-                        .channel
-                        .send("Please specify a valid command");
                 }
+                
             }
         }
         if (message.author.id != '398933581314916362' && message.author.id != '121630407782432769') {
